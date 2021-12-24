@@ -1,56 +1,132 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
-import './App.css';
+import React, { useEffect } from "react";
+import { TelegramClient } from "messaging-api-telegram";
+import { useForm } from "react-hook-form";
+import axios from "axios";
+
+const zipyApi = "https://www.zipy.co.il/api/product/getPromoProducts";
+const webUrl =
+  "https://www.zipy.co.il/p/%D7%90%D7%9C%D7%99%D7%90%D7%A7%D7%A1%D7%A4%D7%A8%D7%A1/";
+
+async function sendAds({ accessToken, userName, limit, chatId }) {
+  const client = new TelegramClient({ accessToken });
+  const res = await axios.get(zipyApi, {
+    params: { shopIds: ["aliexpress"], limit },
+  });
+  let products = res.data.result.map((product) => {
+    return {
+      ...product,
+      url:
+        webUrl +
+        product.name.toLowerCase().split(" ").join("-").split(",")[0] +
+        "/" +
+        product.id +
+        "#" +
+        userName,
+    };
+  });
+  const messages = products.map((product) => {
+    return {
+      image: product.image,
+      msg:
+        "\n\n\nשם:    " +
+        product.name +
+        "\n\nמחיר:    " +
+        product.price.value +
+        product.price.icon +
+        "\n\nבמקום:   " +
+        product.notDiscountedPrice.value +
+        product.notDiscountedPrice.icon +
+        "\n\nהנחה:   " +
+        product.discount +
+        "%" +
+        "\n\nדירוג:    " +
+        product.reviewsAverage +
+        "\n\nתגובות:    " +
+        product.reviewsTotal +
+        "\n\nקישור:    " +
+        product.url,
+    };
+  });
+  try {
+    Promise.all(
+      messages.map((m) =>
+        client.sendPhoto(chatId, m.image, {
+          caption: m.msg,
+          disableNotification: true,
+        })
+      )
+    );
+    alert("Done!");
+  } catch (e) {
+    console.log(e);
+  }
+}
 
 function App() {
-  const [date, setDate] = useState(null);
-  useEffect(() => {
-    async function getDate() {
-      const res = await fetch('/api/date');
-      const newDate = await res.text();
-      setDate(newDate);
-    }
-    getDate();
-  }, []);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
   return (
-    <main>
-      <h1>Create React App + Go API</h1>
-      <h2>
-        Deployed with{' '}
-        <a
-          href="https://vercel.com/docs"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Vercel
-        </a>
-        !
-      </h2>
-      <p>
-        <a
-          href="https://github.com/vercel/vercel/tree/main/examples/create-react-app"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          This project
-        </a>{' '}
-        was bootstrapped with{' '}
-        <a href="https://facebook.github.io/create-react-app/">
-          Create React App
-        </a>{' '}
-        and contains three directories, <code>/public</code> for static assets,{' '}
-        <code>/src</code> for components and content, and <code>/api</code>{' '}
-        which contains a serverless <a href="https://golang.org/">Go</a>{' '}
-        function. See{' '}
-        <a href="/api/date">
-          <code>api/date</code> for the Date API with Go
-        </a>
-        .
-      </p>
-      <br />
-      <h2>The date according to Go is:</h2>
-      <p>{date ? date : 'Loading date...'}</p>
-    </main>
+    <div className="d-flex justify-content-center mx-auto mt-3 my-2">
+      <form className="mx-auto" onSubmit={handleSubmit(sendAds)}>
+        <div className="card-body">
+          <input
+            type="text"
+            placeholder="accessToken"
+            {...register("accessToken", { required: "required" })}
+          />
+          {errors.accessToken && (
+            <p className="form-text text-danger">
+              {" "}
+              {errors.accessToken.message}{" "}
+            </p>
+          )}
+        </div>
+        <div className="card-body">
+          <input
+            type="text"
+            name="userName"
+            placeholder="User Name"
+            {...register("userName", { required: "required" })}
+          />
+          {errors.userName && (
+            <p className="form-text text-danger"> {errors.userName.message} </p>
+          )}
+        </div>
+        <div className="card-body">
+          <input
+            name="chatId"
+            type="text"
+            placeholder="Chat ID"
+            {...register("chatId", { required: "required" })}
+          />
+          {errors.chatId && (
+            <p className="form-text text-danger"> {errors.chatId.message} </p>
+          )}
+        </div>
+        <div className="card-body">
+          <input
+            type="number"
+            name="limit"
+            min="1"
+            max="24"
+            placeholder="Amount Of Ads"
+            {...register("limit", { required: "required" })}
+          />
+          {errors.limit && (
+            <p className="form-text text-danger"> {errors.limit.message} </p>
+          )}
+        </div>
+        <div className="d-flex justify-content-center my-2">
+          <button type="submit" className="btn btn-secondary">
+            Submit
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
