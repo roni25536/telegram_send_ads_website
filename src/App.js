@@ -42,18 +42,22 @@ async function sendAds({ accessToken, userName, limit, chatId }) {
         "\n\nדירוג:    " +
         product.reviewsAverage +
         "\n\nתגובות:    " +
-        product.reviewsTotal +
-        "\n\nקישור:    " +
-        product.url,
+        product.reviewsTotal,
+      url: product.url,
     };
   });
   try {
     Promise.all(
       messages.map((m) =>
-        client.sendPhoto(chatId, m.image, {
-          caption: m.msg,
-          disableNotification: true,
-        })
+        client
+          .sendPhoto(chatId, m.image, {
+            caption: m.msg,
+            disableNotification: true,
+            replyMarkup: {
+              inlineKeyboard: [[{ text: "👈  קישור למוצר  👉", url: m.url }]],
+            },
+          })
+          .catch((e) => console.log(e.message))
       )
     );
     alert("Done!");
