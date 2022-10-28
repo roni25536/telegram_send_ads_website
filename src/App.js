@@ -75,7 +75,22 @@ function App() {
 
   return (
     <div className="d-flex justify-content-center mx-auto mt-3 my-2">
-      <form className="mx-auto" onSubmit={handleSubmit(sendAds)}>
+      <form
+        className="mx-auto"
+        style={{
+          margin: "0",
+          position: "absolute",
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
+        onSubmit={handleSubmit(sendAds)}
+      >
+        <img
+          src="store-front.png"
+          alt="no image"
+          width={"200vw"}
+          // height={"150vw"}
+        />
         <div className="card-body">
           <input
             type="text"
