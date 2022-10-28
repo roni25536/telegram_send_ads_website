@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { TelegramClient } from "messaging-api-telegram";
 import { useForm } from "react-hook-form";
 import axios from "axios";
-import shortUrl from "node-url-shortener";
 
 const zipyApi = "https://www.zipy.co.il/api/product/getPromoProducts";
 const webUrl = "https://www.zipy.co.il/p/אליאקספרס/";
@@ -13,15 +12,11 @@ async function sendAds({ accessToken, userName, limit, chatId }) {
     params: { shopIds: ["aliexpress"], limit },
   });
   let products = res.data.result.map((product) => {
-    const url = shortUrl.short(
-      decodeURI(
-        `${webUrl} ${
-          product.name.toLowerCase().split(" ").join("-").split(",")[0]
-        }/${product.id}/#${userName}`
-      ),
-      (err, url) => url
+    const url = decodeURI(
+      `${webUrl} ${
+        product.name.toLowerCase().split(" ").join("-").split(",")[0]
+      }/${product.id}/#${userName}`
     );
-    console.log(url);
     return {
       ...product,
       url: url,
